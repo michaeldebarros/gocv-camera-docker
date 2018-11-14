@@ -1,56 +1,20 @@
- # **Camera Golang** pt-BR #
+ # **Camera Golang Docker** pt-BR #
 
-O objetivo desta aplicação é criar uma API REST na linguagem Go que faça a gravação de uma câmera conectada ao servidor, com as seguintes 3 rotas, segue descrição:
-
-`POST /api/v1/record/start
-    Parâmetros: nenhum
-    Retorno:
-        Status: 200
-        Body: Gravação iniciada com sucesso`
-        
-`POST /api/v1/record/stop
-    Parâmetros: nenhum
-    Retorno:
-        Status: 200
-        Body: Gravação finalizada com sucesso`
-        
-`GET /api/v1/record
-    Parâmetros: nenhum
-    Retorno: Download do arquivo gravado`
-
-### **Premisas** ###
-
-Tendo em vista o enunciado sintético, algumas premissas foram traçadas a fim de dar tratamento coerente à aplicação.
-
-#### **Arquitetura** ####
-
-Não há no enunciado indicação de níveis de usuários ou manejo de sessões, dando a entender tratar-se de um sistema "fechado" em que apenas um usuário por vez teria acesso às funcionalidades da aplicação.  Isso foi levando em consideração na confecção de uma arquitetura simples.
-
-Esta simplicidade reflete-se no uso de estruturas globais como forma de comunicação de estado da aplicação.  É o caso da variável "recording", que indica se há uma gravação em curso.  
-
-Outro aspecto da arquitetura simples está na gravação do vídeo em si.  O enuciado fala em "uma" câmera ligada ao servidor, exclindo a hipótese de mapeamento de câmeras e gravacões simultâneas. Aliado a isso há também o fato de que a rota `GET /api/v1/record` retornará o download **do arquivo** gravado, indicando a existência de apenas um arquivo de vídeo existente no sistema.  Hipótese distinta seria aquela em que cada comando de gravação gerasse um arquivo distinto, com um id diferente e timestamp.  Porém, não sendo esse o enunciado, foi optado pelo desenho de arquivo de vídeo único, ficando apenas o mais recente disponível para download. 
-
-#### **Rotas** ####
-
-Tratando-se de apenas 3 rotas, possivelmente a melhor opção seria usar o [servidor](https://golang.org/pkg/net/http/#Server) da biblioteca padrão do Go.
-
-Porém, aproveitei a oportunidade para testar o framework [Gin](https://github.com/gin-gonic/gin).
-
-#### **Rodando** ####
-
-[Neste](https://www.youtube.com/watch?v=WVOHA0BA0r0&t=3s) vídeo é possível ver o programa rodando em um Ubuntu 18.04, tendo o OpenCV sido instalado por Meio [desta](https://github.com/hybridgroup/gocv/blob/master/Makefile) Makefile.
+## **broken** ##
 
 #### **Dockerfiles** #### 
-(em progresso)
 
-No intuito de facilitar o deploy este possui algumas Dockerfiles para conteinerização com essa ferramenta.
+No intuito de facilitar o deploy este repositório é uma tentativa de conteinerização com o Docker.
 
-A primeira imagem é a imagem "completa", que pode ser construída com a Dockerfile em `./docker/full-image`. Ela parte de uma imagem golang:1.11.1-alpine passando pela instalação de todo OpenCV e depois faz o build do projeto em si.
-
-Já a segunda foi feita com um multi-stage build, fazendo um build da aplicação Go, instalando OpenCV em uma nova imagem alpine, e copiando o binário Go para essa nova imagem.  O tamanho da imagem passou para 924MB. Está em `./docker/go-binary`.
-
-Para fazer criar a imagem é necessário passar a flag -f com o path da imagem dessa forma: `docker build -t full-image  -f ./docker/full-image/Dockerfile .`
+A primeira imagem é a "completa", que pode ser construída com a Dockerfile em `./docker/full-image`. Ela parte de uma imagem golang:1.11.1-alpine passando pela instalação de todo OpenCV e depois faz o build do projeto em si.
 
 Esta imagem é pesada, com tamanho de 1.29 GB.
 
+Já a segunda foi feita com um multi-stage build, fazendo um build da aplicação Go, instalando OpenCV em uma nova imagem alpine, e copiando o binário Go para essa nova imagem.  O tamanho da imagem passou para 924MB. Está em `./docker/go-binary`.
 
+Para fazer o build da imagem é necessário passar a flag -f com o path da imagem dessa forma: `docker build -t go-binary  -f ./docker/go-binary/Dockerfile .`
+
+**Apesar de o build estar ok, o streaming do video I/O não está funcionando.**
+
+Aparentemente o API backend que o OpenCV está usando é o GStreamer, mas sem sucesso. De acordo com a [documentação](https://www.docs.opencv.org/3.2.0/d0/da7/videoio_overview.html)  
+ o OpenCV seleciona automaticamente o primeira API backend disponível.  Se o Gstreamer não está funcionando, provavelmente seja possível alterar para algo como FFMPEG, sendo necessário ou escolher uma imagem com ele já instalado ou instalar manualmente.
